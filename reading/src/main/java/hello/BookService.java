@@ -10,6 +10,8 @@ import java.util.List;
 
 @Service
 public class BookService {
+	
+  private static String READING_URL = "http://localhost:9090";
 
   private final RestTemplate restTemplate;
 
@@ -27,27 +29,27 @@ public class BookService {
 
   @HystrixCommand(fallbackMethod = "reliable")
   public String readingList() {
-    URI uri = URI.create("http://localhost:8090/recommended");
+    URI uri = URI.create(READING_URL + "/recommended");
 
     return this.restTemplate.getForObject(uri, String.class);
   }
   
   @HystrixCommand(fallbackMethod = "reliableAll")
   public String allBooks() {
-    URI uri = URI.create("http://localhost:8090/all");
+    URI uri = URI.create(READING_URL + "/all");
 
 	return this.restTemplate.getForObject(uri, String.class);	  
   }
   
   @HystrixCommand(fallbackMethod = "reliableGenres")
   public List<String> genres() {
-    URI uri = URI.create("http://localhost:8090/genres");
+    URI uri = URI.create(READING_URL + "/genres");
     return convertStringToList(this.restTemplate.getForObject(uri, String.class));
   } 
   
   @HystrixCommand(fallbackMethod = "reliableBooksByGenres")
   public List<String> booksByGenre(String genre) {
-    URI uri = URI.create("http://localhost:8090/all/" + genre);
+    URI uri = URI.create(READING_URL + "/all/" + genre);
 
     return convertStringToList(this.restTemplate.getForObject(uri, String.class));
   }   
