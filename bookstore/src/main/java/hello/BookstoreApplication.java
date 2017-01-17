@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @SpringBootApplication
 public class BookstoreApplication {
 
+  // versioning!
+  @Value("${bookstore.version}")
+  private String currentVersion;
+  static String VERSION_V1 = "1";
+  static String VERSION_V2 = "2";
+  
+  @RequestMapping(path = "/", produces = "text/html")
+  public String defaultHandler() {
+    return "<html><body>Here are the available REST APIs of the Bookstore Service:" + 
+           "<br><a href=\"/genres\">/genres</a>" + 
+           "<br><a href=\"/recommended\">/recommended</a>" + 
+           "<br><a href=\"/all\">/all</a>" + 
+           "<br><a href=\"/all/Fiction\">/all/{Genre}</a>" + 
+           "<br><a href=\"/all/SomeOtherGenre/v1\">/all/{Genre}/v1</a>" + 
+           "<br><a href=\"/all/SomeOtherGenre/v2\">/all/{Genre}/v2</a>" + 
+    	   "<body></html>";
+  }  
+
+  @RequestMapping(value = "/version")
+  public String setDefaultVersion() {
+	  return currentVersion;
+  }
+  
   @RequestMapping(value = "/recommended")
   public String readingList(){
     return "Spring in Action (Manning), Cloud Native Java (O'Reilly), Learning Spring Boot (Packt), The Phoenix Project";
@@ -32,6 +57,21 @@ public class BookstoreApplication {
   
   @RequestMapping(value = "/all/{genre}")
   public String allBooksByGenre(@PathVariable String genre) {
+	  return allBooksByGenreImpl(genre, currentVersion);
+  }
+  
+  @RequestMapping(value = "/all/{genre}/v1")
+  public String allBooksByGenreV1(@PathVariable String genre) {
+	  return allBooksByGenreImpl(genre, VERSION_V1);
+  }
+  
+  @RequestMapping(value = "/all/{genre}/v2")
+  public String allBooksByGenreV2(@PathVariable String genre) {
+	  return allBooksByGenreImpl(genre, VERSION_V2);
+  }
+  
+
+  protected String allBooksByGenreImpl(String genre, String version) {
 	  if(genre.equalsIgnoreCase("Fiction")) {
 		  return "Fiction 1, Fiction 2, Fiction 3";
 	  }
@@ -43,14 +83,19 @@ public class BookstoreApplication {
 	  if(genre.equalsIgnoreCase("Computer")) {
 		  return "Spring in Action (Manning), Cloud Native Java (O'Reilly), Learning Spring Boot (Packt), The Phoenix Project";
 	  }
-	  
-	  // "simulate a search on amazon"
-	  executeURL("https://www.amazon.com/s/ref=nb_sb_noss_2?url=search-alias%3Dstripbooks&field-keywords=AnyBook");
-	 	  
-	  	  
-	  return "Random Book 1, Random Book 2, Random Book 3";
-  }
 
+	  String bookList = "";
+	  // version 2 executes external requets to Amazon
+	  if(version.equalsIgnoreCase(VERSION_V2)) {
+		  // "simulate a search on amazon"
+		  executeURL("https://www.amazon.com/s/ref=nb_sb_noss_2?url=search-alias%3Dstripbooks&field-keywords=AnyBook");
+		  bookList = "Amazon Book 1, Amazon Book 2, ";
+	  }
+	  	  
+	  bookList += "Random Book 1, Random Book 2, Random Book 3";
+	  return bookList;	  
+  }
+  
   private String executeURL(String uri) {
 	  try {
 		  URL url = new URL(uri);

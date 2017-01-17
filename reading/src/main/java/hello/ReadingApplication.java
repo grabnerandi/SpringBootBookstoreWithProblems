@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,6 +20,12 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class ReadingApplication {
 
+  // versioning!
+  @Value("${reading.version}")
+  private String currentVersion;
+  static String VERSION_V1 = "1";
+  static String VERSION_V2 = "2";
+	
   @Autowired
   private BookService bookService;
 
@@ -27,6 +34,28 @@ public class ReadingApplication {
     return builder.build();
   }
 
+  @RequestMapping(path = "/", produces = "text/html")
+  public String defaultHandler() {
+    return "<html><body>Here are the available REST APIs:" + 
+           "<br><a href=\"/genres\">/genres</a>" + 
+           "<br><a href=\"/to-read\">/to-read</a>" + 
+           "<br><a href=\"/to-read/Fiction\">/to-read/{Genre}</a>" + 
+           "<br><a href=\"/to-read/SomeOtherGenre/v1\">/to-read/{Genre}/v1</a>" + 
+           "<br><a href=\"/to-read/SomeOtherGenre/v2\">/to-read/{Genre}/v2</a>" + 
+           "<br>Current URL to Bookstore is: " + bookService.getBookstoreUrl() +
+    	   "<body></html>";
+  }
+  
+  @RequestMapping(value = "/version")
+  public String setDefaultVersion() {
+	  return currentVersion;
+  }
+      
+  @RequestMapping("/genres")
+  public String genres() {
+    return BookService.convertListToString(bookService.genres());
+  }
+    
   @RequestMapping("/to-read")
   public String toRead() {
     return bookService.readingList();
@@ -34,22 +63,54 @@ public class ReadingApplication {
   
   @RequestMapping("to-read/{genre}")
   public String toRead(@PathVariable String genre) {
-	  
-	  // first we get all genres
+	  return toReadImpl(genre, currentVersion);
+  }
+  
+  @RequestMapping("to-read/{genre}/v1")
+  public String toReadV1(@PathVariable String genre) {
+	  return toReadImpl(genre, VERSION_V1);
+  }
+  
+  @RequestMapping("to-read/{genre}/v2")
+  public String toReadV2(@PathVariable String genre) {
+	  return toReadImpl(genre, VERSION_V2);
+  }  
+  
+  /**
+   * This method actually implements the logic of reading
+   * It provides two versions that can be used via the version / feature toggle parameter
+   * @param genre
+   * @param version
+   * @return
+   */
+  protected String toReadImpl(String genre, String version) {
+	  // first we get all genres and validate if the requested genre actually exists
+	  boolean genreExists = false;
 	  List<String> genres = bookService.genres();
-	  
-	  // now we do something very inefficient - we iterate through the list of genres - get the books by genre and stop that list if we found the genre we are looking for
-	  // this will result in potentially several calls to the backend
 	  for(String genreItem : genres) {
-		  String readingList = bookService.readingList();
-		  List<String> booksByGenre = bookService.booksByGenre(genreItem);
-		  if(genreItem.equalsIgnoreCase(genre)) {
-			  return readingList + "," + booksByGenre.toString();
-		  }
+		  if(genreItem.equalsIgnoreCase(genre)) genreExists = true;
 	  }
 	  
-	  // if we havent found anything we simply return the full list of books
-	  return bookService.allBooks();
+	  // version 1 is more efficient as it directly calls the backend
+	  if(version.equalsIgnoreCase(VERSION_V1)) {
+		  if(!genreExists)
+			  return bookService.allBooks();
+		  
+		  return BookService.convertListToString(bookService.booksByGenre(genre));
+	  } else {
+		  // now we do something very inefficient - we iterate through the list of genres - get the books by genre and stop that list if we found the genre we are looking for
+		  // this will result in potentially several calls to the backend
+		  for(String genreItem : genres) {
+			  String readingList = bookService.readingList();
+			  List<String> booksByGenre = bookService.booksByGenre(genreItem);
+			  if(genreItem.equalsIgnoreCase(genre)) {
+				  return readingList + "," + booksByGenre.toString();
+			  }
+		  }
+		  
+		  // if we havent found anything we simply return the full list of books
+		  return bookService.allBooks();
+	  }
   }
 
   public static void main(String[] args) {
