@@ -1,0 +1,73 @@
+node {
+   def mvnHome
+   stage('Preparation') { // for display purposes
+      // Get some code from a GitHub repository
+      git 'https://github.com/grabnerandi/SpringBootBookstoreWithProblems'
+      // Get the Maven tool.
+      // ** NOTE: This 'M3' Maven tool must be configured
+      // **       in the global configuration.           
+      mvnHome = tool 'M3'
+   }
+   stage('BuildReading') {
+      // Run the maven build
+      env.JAVA_HOME="${tool 'JDK8'}"
+      if (isUnix()) {
+         sh "cd ./reading;'${mvnHome}/bin/mvn' -Dmaven.test.failure.ignore clean package"
+      } else {
+         bat(/"${mvnHome}\bin\mvn" -Dmaven.test.failure.ignore clean package/)
+      }
+   }
+   stage('BuildBookstore') {
+      // Run the maven build
+      env.JAVA_HOME="${tool 'JDK8'}"
+      if (isUnix()) {
+         sh "cd ./bookstore;'${mvnHome}/bin/mvn' -Dmaven.test.failure.ignore clean package"
+      } else {
+         bat(/"${mvnHome}\bin\mvn" -Dmaven.test.failure.ignore clean package/)
+      }
+   }
+   stage('clearStaging') {
+       sh " for pid in \$(ps -ef|grep reading|awk '{print \$2}'); do kill -9 \$pid; done &"
+       sh " for pid in \$(ps -ef|grep bookstore|awk '{print \$2}'); do kill -9 \$pid; done &"
+   }    
+   stage('deployIntoStaging') {
+      // Run the maven build
+      env.JAVA_HOME="${tool 'JDK8'}"
+      if (isUnix()) {
+         sh "java -jar ./reading/target/reading-0.0.1-SNAPSHOT.jar 2>&1 >reading.log & "
+         sh "java -jar ./bookstore/target/bookstore-0.0.1-SNAPSHOT.jar 2>&1 >bookstore.log &"
+      } else {
+         bat(/"${mvnHome}\bin\mvn" -Dmaven.test.failure.ignore clean package/)
+      }
+   }
+   stage('ValidateStageDeployment') {
+     // Run the maven build
+     env.JAVA_HOME="${tool 'JDK8'}"
+     // will do a quick wget to hit the endpoints once - wait 5 seconds so that the servers can start
+     sh "sleep 20"
+     sh "wget http://${appip}:9090/recommended"
+     sh "wget http://${appip}:9080/to-read"
+     //fill it later execute rest api calls
+   }
+   stage ('DynatraceWebAPITests') {
+    //required to define a parameter get the value from the property and then pass from the pipeline to the job
+    // def appip = getProperty("appip")
+    // echo appip
+    
+     //build job: 'Dynatrace WebAPI tests', parameters: [[$class: 'StringParameterValue', name: 'appip', value: appip]]
+   }
+   stage('LoadTest') {
+    // Run the maven build
+    env.JAVA_HOME="${tool 'JDK8'}"
+    //fill it later load test add here
+   }
+   stage('DeployProduction') {
+   // Run the maven build
+   env.JAVA_HOME="${tool 'JDK8'}"
+   //fill it later deploy into production
+   }
+//   stage('Results') {
+  //    junit '**/target/surefire-reports/TEST-*.xml'
+    //  archive 'target/*.jar'
+  // }
+}
