@@ -50,11 +50,12 @@ node {
      //fill it later execute rest api calls
    }
    stage ('DynatraceWebAPITests') {
-    //required to define a parameter get the value from the property and then pass from the pipeline to the job
-     def appip = getProperty("appip")
-     echo appip
+     //required to define a parameter get the value from the property and then pass from the pipeline to the job
+     
+     // def appip = getProperty("appip")
+     // echo appip
     
-     build job: 'Dynatrace WebAPI tests', parameters: [[$class: 'StringParameterValue', name: 'appip', value: appip]]
+     // build job: 'Dynatrace WebAPI tests', parameters: [[$class: 'StringParameterValue', name: 'appip', value: appip]]
    }
    stage('LoadTest') {
     // Run the maven build
