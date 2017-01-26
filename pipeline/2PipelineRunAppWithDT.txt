@@ -27,6 +27,9 @@ node {
       }
    }
    stage('clearStaging') {
+       // we have to kill these existing processes. We learned that killing sometimes doesnt work the first time - so we try it twice :-)
+       sh " for pid in \$(ps -ef|grep reading|grep java|awk '{print \$2}'); do kill -9 \$pid; done &"
+       sh " for pid in \$(ps -ef|grep bookstore|grep java|awk '{print \$2}'); do kill -9 \$pid; done &"
        sh " for pid in \$(ps -ef|grep reading|awk '{print \$2}'); do kill -9 \$pid; done &"
        sh " for pid in \$(ps -ef|grep bookstore|awk '{print \$2}'); do kill -9 \$pid; done &"
    }    
@@ -47,28 +50,20 @@ node {
      sh "sleep 20"
      sh "wget http://${appip}:9090/recommended"
      sh "wget http://${appip}:9080/to-read"
-     //fill it later execute rest api calls
    }
    stage ('DynatraceWebAPITests') {
-     //required to define a parameter get the value from the property and then pass from the pipeline to the job
-     
-     // def appip = getProperty("appip")
-     // echo appip
+      //required to define a parameter get the value from the property and then pass from the pipeline to the job
+      // def appip = getProperty("appip")
+      // echo appip
     
-     // build job: 'Dynatrace WebAPI tests', parameters: [[$class: 'StringParameterValue', name: 'appip', value: appip]]
+      //build job: 'Dynatrace WebAPI tests', parameters: [[$class: 'StringParameterValue', name: 'appip', value: appip]]
    }
    stage('LoadTest') {
-    // Run the maven build
-    env.JAVA_HOME="${tool 'JDK8'}"
-    //fill it later load test add here
+      // TODO: RUN A REAL LOAD TEST AND THEN PROMOTE TO NEXT PHASE
+      env.JAVA_HOME="${tool 'JDK8'}"
    }
    stage('DeployProduction') {
-   // Run the maven build
-   env.JAVA_HOME="${tool 'JDK8'}"
-   //fill it later deploy into production
+      // TODO: DEPLOY BUILD INTO A "PRODUCTION" ENVIRONMENT
+      env.JAVA_HOME="${tool 'JDK8'}"
    }
-//   stage('Results') {
-  //    junit '**/target/surefire-reports/TEST-*.xml'
-    //  archive 'target/*.jar'
-  // }
 }
