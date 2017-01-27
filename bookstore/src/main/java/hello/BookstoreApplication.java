@@ -23,9 +23,25 @@ public class BookstoreApplication {
   static String VERSION_V1 = "1";
   static String VERSION_V2 = "2";
   
+  @Value("${bookstore.processingtime}")
+  private int processingTime;
+  
+  /**
+   * Just simulates some processing. time can be configured through bookstore.processingtime
+   */
+  public void doProcessing() {
+	  if(processingTime <= 0) processingTime = 100;
+	  try {
+		java.lang.Thread.sleep(processingTime);
+	} catch (InterruptedException e) { 
+		// there should really be no problem wkth this :-)
+	}
+  }
+  
   @RequestMapping(path = "/", produces = "text/html")
   public String defaultHandler() {
-    return "<html><body>Here are the available REST APIs of the Bookstore Service:" + 
+	  doProcessing();
+	  return "<html><body>Here are the available REST APIs of the Bookstore Service:" + 
            "<br><a href=\"/genres\">/genres</a>" + 
            "<br><a href=\"/recommended\">/recommended</a>" + 
            "<br><a href=\"/all\">/all</a>" + 
@@ -37,22 +53,26 @@ public class BookstoreApplication {
 
   @RequestMapping(value = "/version")
   public String setDefaultVersion() {
+	  doProcessing();
 	  return currentVersion;
   }
   
   @RequestMapping(value = "/recommended")
   public String readingList(){
-    return "Spring in Action (Manning), Cloud Native Java (O'Reilly), Learning Spring Boot (Packt), The Phoenix Project";
+	  doProcessing();
+	  return "Spring in Action (Manning), Cloud Native Java (O'Reilly), Learning Spring Boot (Packt), The Phoenix Project";
   }
   
   @RequestMapping(value = "/genres")
   public String genreList() {
+	  doProcessing();
 	  return "Fiction, Thriller, Romance, Science, Kids, Computer, English, Spanish, German, Novel, SciFi";
   }
   
   @RequestMapping(value = "/all") 
   public String allBooks() {
-	 return "Book 1, Book 2, Book 3, Book 4, Book 5, Book 6, Book 7, Book 8, Book 9, Book 10";
+	  doProcessing();
+	  return "Book 1, Book 2, Book 3, Book 4, Book 5, Book 6, Book 7, Book 8, Book 9, Book 10";
   }
   
   @RequestMapping(value = "/all/{genre}")
@@ -72,6 +92,8 @@ public class BookstoreApplication {
   
 
   protected String allBooksByGenreImpl(String genre, String version) {
+	  doProcessing();
+	  
 	  if(genre.equalsIgnoreCase("Fiction")) {
 		  return "Fiction 1, Fiction 2, Fiction 3";
 	  }

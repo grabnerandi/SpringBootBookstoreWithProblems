@@ -25,6 +25,21 @@ public class ReadingApplication {
   private String currentVersion;
   static String VERSION_V1 = "1";
   static String VERSION_V2 = "2";
+  
+  @Value("${reading.processingtime}")
+  private int processingTime;
+  
+  /**
+   * Just simulates some processing. time can be configured through reading.processingtime
+   */
+  public void doProcessing() {
+	  if(processingTime <= 0) processingTime = 100;
+	  try {
+		java.lang.Thread.sleep(processingTime);
+	} catch (InterruptedException e) { 
+		// there should really be no problem wkth this :-)
+	}
+  }  
 	
   @Autowired
   private BookService bookService;
@@ -36,7 +51,8 @@ public class ReadingApplication {
 
   @RequestMapping(path = "/", produces = "text/html")
   public String defaultHandler() {
-    return "<html><body>Here are the available REST APIs:" + 
+	  doProcessing();
+	  return "<html><body>Here are the available REST APIs:" + 
            "<br><a href=\"/genres\">/genres</a>" + 
            "<br><a href=\"/to-read\">/to-read</a>" + 
            "<br><a href=\"/to-read/Fiction\">/to-read/{Genre}</a>" + 
@@ -53,12 +69,14 @@ public class ReadingApplication {
       
   @RequestMapping("/genres")
   public String genres() {
-    return BookService.convertListToString(bookService.genres());
+	  doProcessing();
+	  return BookService.convertListToString(bookService.genres());
   }
     
   @RequestMapping("/to-read")
   public String toRead() {
-    return bookService.readingList();
+	  doProcessing();
+	  return bookService.readingList();
   }
   
   @RequestMapping("to-read/{genre}")
@@ -84,6 +102,8 @@ public class ReadingApplication {
    * @return
    */
   protected String toReadImpl(String genre, String version) {
+	  doProcessing();
+	  
 	  // first we get all genres and validate if the requested genre actually exists
 	  boolean genreExists = false;
 	  List<String> genres = bookService.genres();
