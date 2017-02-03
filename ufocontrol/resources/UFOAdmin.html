@@ -1,0 +1,53 @@
+<html>
+<head>
+   <title>Mastering the Dynatrace UFO</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    </head>
+<body>
+  <div style="padding:16px;">
+    UFO IP : <input type="textbox" id="IP" value="10.0.0.76"></input>
+  </div>
+  <div style="padding:16px;">
+	Top Color : <input type="textbox" id="TopColor" value="00FF00"></input>	Bottom Color : <input type="textbox" id="BottomColor" value="FF0000"></input>
+
+  </div>
+  <div>
+    <p class="status">last status call</p>
+  </div>
+
+  <button id="Reset">Reset UFO</button>
+  <button id="SetTop">Set TOP</button>
+  <button id="SetBottom">Set Bottom</button>
+
+  <script>
+    function getUFOURL() {
+	  return "http://" + $('#IP').val();
+	}
+	function callUFO(apiString) {
+	  var fullURL = getUFOURL() + apiString;
+	  $.ajax({
+        url: fullURL
+      }).done(function() {
+         $('.status').append("success");
+      }).fail(function() {
+         $('.status').append("success");
+	  });
+	}
+  
+    $("#Reset").click(function () {	  
+	  callUFO("/api?top_init=0&bottom_init=0");
+    });
+	
+	$("#SetTop").click(function () {	  
+	  var color = $('#TopColor').val();
+	  callUFO("/api?top_init=1&top_bg=" + color);
+    });
+	
+	$("#SetBottom").click(function () {
+	  var color = $('#BottomColor').val();	
+	  callUFO("/api?bottom_init=0&bottom_bg=" + color);
+    });
+  </script>
+  
+</body>
+</html>
