@@ -18,6 +18,10 @@
   <button id="Reset">Reset UFO</button>
   <button id="SetTop">Set TOP</button>
   <button id="SetBottom">Set Bottom</button>
+  <br>
+  <button id="KnightRider">Knight Rider</button>
+  <button id="Steps">Steps</button>
+
 
   <script>
     function getUFOURL() {
@@ -38,16 +42,23 @@
 	  callUFO("/api?top_init=0&bottom_init=0");
     });
 	
-	$("#SetTop").click(function () {	  
+    $("#SetTop").click(function () {	  
 	  var color = $('#TopColor').val();
 	  callUFO("/api?top_init=1&top_bg=" + color);
     });
 	
-	$("#SetBottom").click(function () {
+    $("#SetBottom").click(function () {
 	  var color = $('#BottomColor').val();	
 	  callUFO("/api?bottom_init=0&bottom_bg=" + color);
     });
-  </script>
+
+    $("#Steps").click(function () {
+	// Visualizing Steps Statistics from Andi (Blue) and his girlfriend (Yellow)
+        // Top ROW: How far away are both of us on our daily goal. Daily goal is 10000. All of us have 7 LEDs to visualize. We keep LED 0 black
+        // Bottom ROW: Who is currently winning the Average Day Challenge. Visualizing current status of each and morphing to current lead
+	callUFO("/api?top_init=1&top_bg=000000&top=1|1|0000FF|7|3|FFFF00&bottom_init=1&bottom=0|8|0000FF|8|7|FFFF00&bottom_whirl=100&bottom_bg=0000FF&bottom_morph=1000|5" + color);
+    });
+</script>
   
 </body>
 </html>
