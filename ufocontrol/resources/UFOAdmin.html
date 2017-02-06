@@ -9,8 +9,10 @@
   </div>
   <div style="padding:16px;">
 	Top Color : <input type="textbox" id="TopColor" value="00FF00"></input>	Bottom Color : <input type="textbox" id="BottomColor" value="FF0000"></input>
-
   </div>
+  <div style="padding:16px;">
+	Generic Command: <input type="textbox" id="GenericCommand" value="/api?top_init=1&top=0|3|FF0000&top_bg=00FF00&bottom_init=1&bottom_bg=FF0000" size="100">
+  </div>  
   <div>
     <p class="status">last status call</p>
   </div>
@@ -18,12 +20,28 @@
   <button id="Reset">Reset UFO</button>
   <button id="SetTop">Set TOP</button>
   <button id="SetBottom">Set Bottom</button>
+  <button id="ExecuteGeneric">Execute Generic</button>
   <br>
   <button id="KnightRider">Knight Rider</button>
+  <br>
   <button id="Steps">Steps</button>
+  <br>
+  <button id="Cafe">Coffeemaschines</button>
+  <br>
+  <button id="Inauguration">Inauguration</button>  
+  <br>
+  <button id="Standup">Standup</button>   
+  <br>
+  <button id="RequestStatus">Request Status</button>    
 
 
   <script>
+    // Position keeps track of current position
+    var knightRiderPos = 0;
+	// Direction: 1=clock wise: 0=counter clockwise
+	var knightRiderDirection = 1;
+	var keepDoingKnightRider = true;
+
     function getUFOURL() {
 	  return "http://" + $('#IP').val();
 	}
@@ -32,13 +50,14 @@
 	  $.ajax({
         url: fullURL
       }).done(function() {
-         $('.status').append("success");
+         $('.status').text("success");
       }).fail(function() {
-         $('.status').append("success");
+         $('.status').text("fail");
 	  });
 	}
   
     $("#Reset").click(function () {	  
+	  keepDoingKnightRider = false;
 	  callUFO("/api?top_init=0&bottom_init=0");
     });
 	
@@ -52,12 +71,103 @@
 	  callUFO("/api?bottom_init=0&bottom_bg=" + color);
     });
 
+    $("#ExecuteGeneric").click(function () {
+	  var executeURL = $('#GenericCommand').val();	
+	  callUFO(executeURL);
+    });
+	
+	function doKnightRider() {
+	  if(keepDoingKnightRider) {
+	    // find the next position
+		if(knightRiderDirection == 1) knightRiderPos++; else knightRiderPos--;
+
+		// reverse direction if we are at the end
+        if(knightRiderPos > 12) knightRiderDirection = 0;
+		if(knightRiderPos < 1) knightRiderDirection = 1;
+		
+		// get our strings we need for the API
+		var ufoString = knightRiderPos + "|3|FF0000";
+		
+	    callUFO("/api?top_init=1&top=" + ufoString + "&top_bg=000000&bottom_init=1&bottom=" + ufoString + "&bottom_bg=000000");
+		
+		// now call us in a loop every 100ms
+		setTimeout(doKnightRider, 100);
+	  }
+	}
+	
+    $("#KnightRider").click(function () {
+	  // Knight Rider will move 3 Red LEDS clockwise and then counterclockwise -> just like KITT in Knight Rider :-)
+	  knightRiderPos = 0;
+	  knightRiderDirection = 1;
+	  keepDoingKnightRider = true;
+	  doKnightRider();
+    });	
+
     $("#Steps").click(function () {
 	// Visualizing Steps Statistics from Andi (Blue - 0000FF) and his girlfriend (Yellow - FFFF00)
         // Top ROW: How far away are both of us on our daily goal. Daily goal is 10000. All of us have 7 LEDs to visualize. We keep LED 0 black
         // Bottom ROW: Who is currently winning the Average Day Challenge. Visualizing current status of each and morphing to current lead
-	callUFO("/api?top_init=1&top_bg=000000&top=1|1|0000FF|7|3|FFFF00&bottom_init=1&bottom=0|8|0000FF|8|7|FFFF00&bottom_whirl=100&bottom_bg=0000FF&bottom_morph=1000|5");
+	callUFO("/api?top_init=1&top_bg=000000&top=1|1|0000FF|7|3|FFFF00&top_whirl=100&bottom_init=1&bottom_bg=0000FF&bottom=0|8|0000FF|8|7|FFFF00&bottom_morph=1000|5");
     });
+	
+	
+	$("#Cafe").click(function () {
+	// Visualizing the Queue Length on the two Coffee Machines in Linz
+	// Top is the Left Coffee Machine -> always very busy
+	// Bottom is the Right Coffee Machine -> not that busy -> I go with that :-)
+	callUFO("/api?top_init=1&top_bg=000000&top=1|8|FF0000|&top_whirl=50&bottom_init=1&bottom_bg=00FF00&bottom=0|15|000000&bottom_morph=500|5");
+    });
+
+	$("#Inauguration").click(function () {
+    // Visualization of the Inauguration Crowds 2009 and 2017
+	// Top Row: 2009: Obama (dark color) + all other rainbow colors
+	// Bottom Row: 2017: Trump (a hint of Orange) + some red (followers) and some white :-)
+	callUFO("/api?top_init=1&top_bg=FF0000&top=0|2|000000|2|2|34AA71|4|2|08D874|6|2|08CAD8|8|2|5C7FD1|10|2|134DD6|12|2|7113D6|13|1|CF13D6|14|1|D61340&top_whirl=50&bottom_init=1&bottom_bg=FFFFFF&bottom=0|2|FFA500|2|6|0000FF&bottom_whirl=50");
+    });	
+	
+	var standupCurrentMember = 1;
+	var standupCurrentTimer = 15;
+	var standupColors = ["FF0000", "00FF00", "0000FF", "FF00FF", "00FFFF"];
+	var keepDoingStandup = false;
+	function doStandup() {
+	  if(keepDoingStandup) {
+	    standupCurrentTimer--;
+		if(standupCurrentTimer <= 0) {standupCurrentMember++;standupCurrentTimer=15;}
+		if(standupCurrentMember == 6) {keepDoingStandup = false;callUFO("/api?top_init=0&bottom_init=0");return;}
+	  
+	    var topRing = "";
+	    for(i=0;i<5;i++) {
+	      var currentIndex = i*3;
+		  if(i>0) topRing += "|";
+	      topRing += currentIndex + "|3|" + standupColors[i];
+	    }
+	  
+	    var bottomRing = "0|" + standupCurrentTimer + "|" + standupColors[standupCurrentMember-1];
+		
+		callUFO("/api?top_init=1&top=" + topRing + "&bottom_init=1&bottom_bg=000000&bottom=" + bottomRing);
+		
+		// now call us in a loop every 100ms
+		setTimeout(doStandup, 500);
+	  }
+	}
+
+	$("#Standup").click(function () {
+      // Daily Standup Meetings
+	  // Top Row: Each Team Member who is present is represented by a color 
+	  // Bottom Row: Acts Like a Timer: How much time left for current member
+	  standupCurrentMember = 0;
+	  standupCurrentTimer = 0;
+	  keepDoingStandup = true;
+	  doStandup();
+    });		
+	
+	$("#RequestStatus").click(function () {
+      // Visualizing STatus of Requests (HTTP Status and Response Time)
+	  // Top Row: Distribution of HTTP Status Codes (2xx == GREEN, 3xx == BLUE, 4xx == YELLOW, 5XX = RED) 
+	  // Bottom Row: Requests per Performance Buckete (<1s == GREEN, <3s = YELLOW, <5s == ORANGE, >5s == RED)
+	  callUFO("/api?top_init=1&top=0|8|00FF00|8|2|0000FF|10|2|FFFF00|12|4|FF0000&top_whirl=50&bottom_init=1&bottom=0|1|00FF00|1|6|FFFF00|7|3|FF6600|10|5|FF0000&bottom_whirl=50");	
+    });	
+	
 </script>
   
 </body>
