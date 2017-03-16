@@ -32,7 +32,9 @@
   <br>
   <button id="Standup">Standup</button>   
   <br>
-  <button id="RequestStatus">Request Status</button>    
+  <button id="RequestStatus">Request Status</button>  
+  <br><br>
+  <button id="IPAddress">Visualize THIS IP (One Click per Digit)</button> <input type="textbox" id="VisualizeIP" value="192.168.0.36"></input> 
 
 
   <script>
@@ -167,6 +169,32 @@
 	  // Bottom Row: Requests per Performance Buckete (<1s == GREEN, <3s = YELLOW, <5s == ORANGE, >5s == RED)
 	  callUFO("/api?top_init=1&top=0|8|00FF00|8|2|0000FF|10|2|FFFF00|12|4|FF0000&top_whirl=50&bottom_init=1&bottom=0|1|00FF00|1|6|FFFF00|7|3|FF6600|10|5|FF0000&bottom_whirl=50");	
     });	
+	
+	function visualizeIPDigit(digit, color) {
+	  if(digit==0) callUFO("/api?top_init=1&bottom_init=1");
+	  if(digit==1) callUFO("/api?top_init=1&bottom_init=1&bottom=0|1|" + color);
+	  if(digit==2) callUFO("/api?top_init=1&bottom_init=1&bottom=0|2|" + color);
+	  if(digit==3) callUFO("/api?top_init=1&bottom_init=1&bottom=0|3|" + color);
+	  if(digit==4) callUFO("/api?top_init=1&bottom_init=1&bottom=0|4|" + color);
+	  if(digit==5) callUFO("/api?top_init=1&bottom_init=1&bottom=0|5|" + color);
+	  if(digit==6) callUFO("/api?top_init=1&bottom_init=1&bottom=0|5|" + color + "|8|1|" + color);
+	  if(digit==7) callUFO("/api?top_init=1&bottom_init=1&bottom=0|5|" + color + "|8|2|" + color);
+	  if(digit==8) callUFO("/api?top_init=1&bottom_init=1&bottom=0|5|" + color + "|8|3|" + color);
+	  if(digit==9) callUFO("/api?top_init=1&bottom_init=1&bottom=0|5|" + color + "|8|4|" + color);
+	  if(digit==10) callUFO("/api?top_init=1&bottom_init=1&bottom=0|1|FFFFFF|5|1|FFFFFF|10|1|FFFFFF")
+	}
+	
+	var currentIndex = 0;
+	$("#IPAddress").click(function() {
+	  // Visualizes the IP Address as the UFO normally does after connecting to the WiFi. Every click on that button will visualize the next digit
+	  var IP = $('#VisualizeIP').val();
+	  if(currentIndex >= IP.length) currentIndex = 0;
+	  var digit = IP.charAt(currentIndex);
+	  currentIndex++;	  
+	  
+	  if(digit == ".") visualizeIPDigit(10, "00FF00");
+	  else visualizeIPDigit(parseInt(digit), "00FF00");
+	});
 	
 </script>
   
