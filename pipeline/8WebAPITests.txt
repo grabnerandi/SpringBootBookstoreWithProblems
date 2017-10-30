@@ -1,4 +1,4 @@
-// These are the wgets that just use the Dynatrace HTTP Test Name
+echo These are the wgets that just use the Dynatrace HTTP Test Name
  wget http://${appip}:9080/to-read         -d --header="x-dynatrace: NA=reading.to-read"
  wget http://${appip}:9080/to-read/Fiction -d --header="x-dynatrace: NA=reading.to-read.fiction"
  wget http://${appip}:9080/to-read/Misc    -d --header="x-dynatrace: NA=reading.to-read.misc"
@@ -7,7 +7,7 @@
  wget http://${appip}:9090/all             -d --header="x-dynatrace: NA=bookstore.all"
 
 
-// These are the wgets that also include the Dynatrace Test Run ID as provided by the Dynatrace Jenkins Plugin
+echo These are the wgets that also include the Dynatrace Test Run ID as provided by the Dynatrace Jenkins Plugin
  wget http://${appip}:9080/to-read         -d --header="x-dynatrace: NA=reading.to-read;TR=$dtTestrunID"
  wget http://${appip}:9080/to-read/Fiction -d --header="x-dynatrace: NA=reading.to-read.fiction;TR=$dtTestrunID"
  wget http://${appip}:9080/to-read/Misc    -d --header="x-dynatrace: NA=reading.to-read.misc;TR=$dtTestrunID"
