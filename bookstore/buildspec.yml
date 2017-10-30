@@ -4,10 +4,12 @@ phases:
   build:
     commands:
       - echo Build started on `date`
+      - cd bookstore
       - mvn test
   post_build:
     commands:
       - echo Build completed on `date`
+      - cd bookstore
       - mvn package
 artifacts:
   files:
